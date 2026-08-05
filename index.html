@@ -110,7 +110,7 @@
     </section>
     <footer>Estimasi nutrisi memakai referensi makanan generik; potongan daging, merek, dan cara masak dapat mengubah hasil. Data disimpan di browser perangkat ini, dan disinkronkan ke cloud jika kode akun sudah diisi—unduh cadangan secara berkala.</footer>
   </main>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
   <script>
     // ====== ISI 2 BARIS INI SETELAH BIKIN PROJECT SUPABASE ======
     // Ambil dari: Supabase Dashboard -> Settings -> API
@@ -130,8 +130,14 @@
     let pushTimer = null;
     function getClient() {
       if (!SUPABASE_URL.startsWith('http')) return null;
-      if (!sbClient) sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      return sbClient;
+      if (typeof supabase === 'undefined') return null;
+      try {
+        if (!sbClient) sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        return sbClient;
+      } catch (e) {
+        console.error('Supabase init failed', e);
+        return null;
+      }
     }
     const getSyncCode = () => localStorage.getItem('carnivore-sync-code') || '';
     const setSyncCode = v => localStorage.setItem('carnivore-sync-code', v);
@@ -267,7 +273,7 @@
       await initSync();
     });
     render();
-    initSync();
+    window.addEventListener('load', () => setTimeout(initSync, 200));
   </script>
 </body>
 </html>
