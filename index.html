@@ -1,1 +1,280 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1e7a54">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>Carnivore Daily</title>
+  <style>
+    :root { --ink:#1c2420; --muted:#65716a; --paper:#f8f8f3; --panel:#fff; --line:#e2e7de; --accent:#1e7a54; --accent-soft:#e5f3eb; --warm:#d18a3b; --danger:#b54040; }
+    * { box-sizing:border-box; } body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    main { width:min(1080px,calc(100% - 32px)); margin:0 auto; padding:34px 0 54px; }
+    header { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:28px; } h1 { margin:0; font-size:clamp(1.75rem,4vw,2.6rem); letter-spacing:-.04em; } h2 { margin:0 0 14px; font-size:1.05rem; } p { margin:.25rem 0 0; } .muted { color:var(--muted); } .badge { display:inline-flex; align-items:center; gap:7px; border-radius:999px; padding:7px 10px; background:var(--accent-soft); color:var(--accent); font-size:.83rem; font-weight:700; white-space:nowrap; }
+    .cards { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; } .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:17px; } .metric-label { display:block; color:var(--muted); font-size:.83rem; } .metric { display:block; margin-top:4px; font-size:1.55rem; letter-spacing:-.04em; } .metric-note { display:block; margin-top:4px; color:var(--muted); font-size:.8rem; }
+    .dashboard { display:grid; grid-template-columns:1.22fr .78fr; gap:16px; align-items:start; } .wide { grid-column:1 / -1; } .chart { width:100%; height:auto; display:block; overflow:visible; } .chart text { fill:var(--muted); font-size:11px; } .chart .grid { stroke:var(--line); } .chart .target { stroke:var(--warm); stroke-dasharray:5 4; } .chart .line { fill:none; stroke:var(--accent); stroke-width:3; stroke-linecap:round; stroke-linejoin:round; } .chart .dot { fill:#fff; stroke:var(--accent); stroke-width:2.5; }
+    form { display:grid; gap:12px; } .fields { display:grid; grid-template-columns:repeat(2,1fr); gap:11px; } label { display:grid; gap:5px; color:var(--muted); font-size:.82rem; font-weight:650; } input,textarea { width:100%; border:1px solid var(--line); border-radius:9px; padding:10px; background:#fff; color:var(--ink); font:inherit; } textarea { resize:vertical; min-height:72px; } input:focus,textarea:focus { outline:3px solid #cce8d9; border-color:var(--accent); } .full { grid-column:1 / -1; }
+    .actions { display:flex; gap:9px; flex-wrap:wrap; align-items:center; } button,.file-label { border:0; cursor:pointer; border-radius:9px; background:var(--accent); color:#fff; font:inherit; font-weight:700; padding:10px 13px; } button.secondary,.file-label { background:#edf0ea; color:var(--ink); } button.danger { background:transparent; color:var(--danger); padding-left:0; } .file-label input { display:none; } .presets { display:flex; flex-wrap:wrap; gap:7px; } .preset { padding:7px 9px; font-size:.8rem; background:#edf0ea; color:var(--ink); }
+    .logs { padding:0; margin:0; list-style:none; } .log { display:grid; grid-template-columns:auto 1fr auto; gap:10px; padding:11px 0; border-bottom:1px solid var(--line); align-items:center; } .log:last-child { border:0; padding-bottom:0; } .log-date { display:grid; place-items:center; width:43px; height:43px; border-radius:10px; background:var(--accent-soft); color:var(--accent); font-size:.75rem; font-weight:800; line-height:1.1; text-align:center; } .log strong { display:block; } .log small { color:var(--muted); } .empty { padding:18px 0 4px; color:var(--muted); text-align:center; }
+    .settings { display:grid; grid-template-columns:1fr 1fr; gap:11px; margin-bottom:14px; } .status { min-height:1.4em; color:var(--accent); font-size:.85rem; } footer { margin-top:22px; color:var(--muted); font-size:.78rem; }
+    @media (max-width:780px) { .cards { grid-template-columns:repeat(2,1fr); } .dashboard { grid-template-columns:1fr; } } @media (max-width:460px) { main { width:min(100% - 22px,1080px); padding-top:22px; } header { align-items:flex-start; flex-direction:column; margin-bottom:20px; } .fields,.settings { grid-template-columns:1fr; } .cards { gap:9px; } .card { padding:14px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div><h1>Carnivore Daily</h1><p class="muted">Log pribadi untuk berat, menu, protein, dan aktivitas.</p></div>
+      <span class="badge" id="streak">● Mulai minggu ini</span>
+    </header>
+
+    <section class="cards" aria-label="Ringkasan">
+      <article class="card"><span class="metric-label">Berat terbaru</span><strong class="metric" id="latestWeight">—</strong><span class="metric-note" id="weightChange">Tambahkan log pertama</span></article>
+      <article class="card"><span class="metric-label">Kalori hari ini</span><strong class="metric" id="todayCalories">0</strong><span class="metric-note"><span id="todayMeals">0</span> entri makanan</span></article>
+      <article class="card"><span class="metric-label">Protein hari ini</span><strong class="metric" id="todayProtein">0 g</strong><span class="metric-note" id="proteinGoalLabel">Target 150 g</span></article>
+      <article class="card"><span class="metric-label">Aktivitas hari ini</span><strong class="metric" id="todayActivity">0 mnt</strong><span class="metric-note">Durasi tercatat</span></article>
+    </section>
+
+    <section class="dashboard">
+      <article class="card">
+        <h2>Tren berat badan</h2>
+        <svg id="chart" class="chart" viewBox="0 0 610 255" role="img" aria-label="Grafik berat badan berdasarkan tanggal"></svg>
+      </article>
+      <article class="card">
+        <h2>Target</h2>
+        <div class="settings">
+          <label>Berat awal (kg)<input id="startWeight" type="number" min="30" max="300" step="0.1"></label>
+          <label>Target berat (kg)<input id="targetWeight" type="number" min="30" max="300" step="0.1"></label>
+          <label class="full">Target protein (g / hari)<input id="proteinGoal" type="number" min="0" step="5"></label>
+        </div>
+        <button id="saveSettings" type="button">Simpan target</button>
+        <p class="status" id="settingsStatus" aria-live="polite"></p>
+      </article>
+
+      <article class="card">
+        <h2>Tambah log</h2>
+        <form id="logForm">
+          <div class="fields">
+            <label>Tanggal<input id="date" type="date" required></label>
+            <label>Berat (kg)<input id="weight" type="number" min="30" max="300" step="0.1" placeholder="Contoh: 78.4"></label>
+            <label class="full">Makanan / menu<input id="food" type="text" placeholder="Contoh: 250 g ribeye + 3 telur + 15 g mentega" autocomplete="off"></label>
+            <div class="full presets" aria-label="Preset menu"><button type="button" class="preset" data-menu="250 g ribeye + 3 telur">Ribeye + telur</button><button type="button" class="preset" data-menu="1 bebek goreng + 5 tusuk sate kulit + 3 tusuk sate ampela">Bebek + sate</button><button type="button" class="preset" data-menu="30 g kerupuk kulit + 3 telur">Kerupuk kulit + telur</button></div>
+            <label>Berat makanan<select id="preparation"><option value="cooked">Sudah matang</option><option value="raw">Mentah</option></select></label>
+            <div class="full muted" id="foodEstimate">Satu kolom bisa banyak menu. Pisahkan dengan +, koma, /, “dan”, atau baris baru.</div>
+            <label>Protein (g)<input id="protein" type="number" min="0" step="1" placeholder="Contoh: 72"></label>
+            <label>Lemak (g)<input id="fat" type="number" min="0" step="1" placeholder="Estimasi otomatis"></label>
+            <label>Kalori (kkal)<input id="calories" type="number" min="0" step="1" placeholder="Estimasi otomatis"></label>
+            <label>Aktivitas<input id="activity" type="text" placeholder="Contoh: jalan cepat"></label>
+            <label>Durasi (menit)<input id="minutes" type="number" min="0" step="5" placeholder="Contoh: 30"></label>
+            <label class="full">Catatan<textarea id="note" placeholder="Energi, tidur, rasa lapar, pencernaan, dll."></textarea></label>
+          </div>
+          <div class="actions"><button type="submit" id="submitLog">Simpan log</button><button class="secondary" type="button" id="cancelEdit" hidden>Batal edit</button><span class="status" id="logStatus" aria-live="polite"></span></div>
+        </form>
+      </article>
+
+      <article class="card">
+        <h2>Riwayat log</h2>
+        <ul class="logs" id="logs"></ul>
+      </article>
+
+      <article class="card wide">
+        <h2>Feedback hari ini</h2>
+        <p id="feedback" class="muted" aria-live="polite">Tambahkan log untuk mendapatkan feedback.</p>
+      </article>
+
+      <article class="card wide">
+        <h2>Review 7 hari</h2>
+        <p id="weeklyReview" class="muted">Belum cukup data untuk review mingguan.</p>
+      </article>
+
+      <article class="card wide">
+        <h2>Cadangan data</h2>
+        <div class="actions">
+          <button type="button" class="secondary" id="exportData">Unduh cadangan</button>
+          <label class="file-label">Pulihkan cadangan<input id="importData" type="file" accept="application/json"></label>
+          <button type="button" class="danger" id="clearData">Hapus semua data</button>
+        </div>
+        <p class="status" id="backupStatus" aria-live="polite"></p>
+      </article>
+
+      <article class="card wide">
+        <h2>Sinkronisasi antar perangkat</h2>
+        <p class="muted">Isi kode akun yang sama di semua perangkat (laptop &amp; HP) supaya log tersimpan di cloud dan otomatis nyambung di mana pun kamu buka.</p>
+        <div class="settings">
+          <label class="full">Kode akun (rahasia, bebas, contoh: nama-tanggal-lahir)<input id="syncCode" type="text" placeholder="Contoh: budi-carnivore-2025" autocomplete="off"></label>
+        </div>
+        <div class="actions">
+          <button type="button" id="saveSyncCode">Simpan &amp; Sinkronkan</button>
+        </div>
+        <p class="status" id="syncStatus" aria-live="polite">Belum tersinkron.</p>
+      </article>
+    </section>
+    <footer>Estimasi nutrisi memakai referensi makanan generik; potongan daging, merek, dan cara masak dapat mengubah hasil. Data disimpan di browser perangkat ini, dan disinkronkan ke cloud jika kode akun sudah diisi—unduh cadangan secara berkala.</footer>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
+  <script>
+    // ====== ISI 2 BARIS INI SETELAH BIKIN PROJECT SUPABASE ======
+    // Ambil dari: Supabase Dashboard -> Settings -> API
+    const SUPABASE_URL = 'https://nuxmvlwjpxuxlxwgkjvw.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_9t9yUUeuAzFmyLU5O7shdA_B3RTlylp';
+    // ==============================================================
+    const STORAGE_KEY = 'carnivore-daily-v1';
+    const today = new Date().toISOString().slice(0, 10);
+    const monday = (() => { const d = new Date(); const offset = (d.getDay() + 6) % 7; d.setDate(d.getDate() - offset); return d.toISOString().slice(0, 10); })();
+    const initial = { settings:{ startWeight:'', targetWeight:70, proteinGoal:150 }, logs:[] };
+    let app = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || initial;
+    let editingId = null;
+    const el = id => document.getElementById(id);
+    const esc = s => String(s || '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+    const kg = v => `${Number(v).toFixed(1)} kg`;
+    let sbClient = null;
+    let pushTimer = null;
+    function getClient() {
+      if (!SUPABASE_URL.startsWith('http')) return null;
+      if (typeof supabase === 'undefined') return null;
+      try {
+        if (!sbClient) sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        return sbClient;
+      } catch (e) {
+        console.error('Supabase init failed', e);
+        return null;
+      }
+    }
+    const getSyncCode = () => localStorage.getItem('carnivore-sync-code') || '';
+    const setSyncCode = v => localStorage.setItem('carnivore-sync-code', v);
+    async function pullRemote(code) {
+      const client = getClient(); if (!client || !code) return null;
+      const { data, error } = await client.from('tracker_state').select('data').eq('sync_code', code).maybeSingle();
+      if (error) { console.error('pullRemote', error); return null; }
+      return data ? data.data : null;
+    }
+    async function pushRemote(code, payload) {
+      const client = getClient(); if (!client || !code) return false;
+      const { error } = await client.from('tracker_state').upsert({ sync_code: code, data: payload, updated_at: new Date().toISOString() });
+      if (error) { console.error('pushRemote', error); return false; }
+      return true;
+    }
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(app));
+      const code = getSyncCode();
+      if (!code || !getClient()) return;
+      if (el('syncStatus')) el('syncStatus').textContent = 'Menyinkronkan…';
+      clearTimeout(pushTimer);
+      pushTimer = setTimeout(async () => {
+        const ok = await pushRemote(code, app);
+        if (el('syncStatus')) el('syncStatus').textContent = ok ? `Tersinkron ${new Date().toLocaleTimeString('id-ID')}` : 'Gagal sinkron—cek koneksi, log tetap aman di perangkat ini.';
+      }, 700);
+    }
+    async function initSync() {
+      const code = getSyncCode();
+      if (el('syncCode')) el('syncCode').value = code;
+      if (!getClient()) { if (el('syncStatus')) el('syncStatus').textContent = 'Sinkronisasi belum diaktifkan (lihat README).'; return; }
+      if (!code) { if (el('syncStatus')) el('syncStatus').textContent = 'Isi kode akun untuk mengaktifkan sinkronisasi.'; return; }
+      if (el('syncStatus')) el('syncStatus').textContent = 'Memuat data dari cloud…';
+      const remote = await pullRemote(code);
+      if (remote) {
+        app = remote;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(app));
+        render();
+        if (el('syncStatus')) el('syncStatus').textContent = `Data cloud dimuat ${new Date().toLocaleTimeString('id-ID')}`;
+      } else {
+        await pushRemote(code, app);
+        if (el('syncStatus')) el('syncStatus').textContent = 'Data perangkat ini diunggah ke cloud.';
+      }
+    }
+    const dateText = d => new Intl.DateTimeFormat('id-ID',{day:'2-digit',month:'short'}).format(new Date(`${d}T12:00:00`));
+    const dayText = d => new Intl.DateTimeFormat('id-ID',{weekday:'short'}).format(new Date(`${d}T12:00:00`));
+    const foods = [
+      { keys:['daging giling','ground beef'], label:'daging giling', kcal:254, protein:26, fat:17 },
+      { keys:['ribeye','rib eye','steak','daging sapi','beef'], label:'daging sapi/steak', kcal:291, protein:24, fat:21 },
+      { keys:['bebek goreng','fried duck'], label:'bebek goreng', kcal:450, protein:30, fat:32, unit:true },
+      { keys:['sate kulit','satay skin'], label:'sate kulit', kcal:72, protein:3, fat:6, unit:true },
+      { keys:['sate ampela','satay gizzard'], label:'sate ampela', kcal:35, protein:4, fat:1.5, unit:true },
+      { keys:['telur','egg'], label:'telur', kcal:72, protein:6.3, fat:4.8, unit:true },
+      { keys:['dada ayam','chicken breast'], label:'dada ayam', kcal:165, protein:31, fat:3.6 },
+      { keys:['paha ayam','chicken thigh'], label:'paha ayam', kcal:209, protein:26, fat:11 },
+      { keys:['ayam','chicken'], label:'ayam', kcal:215, protein:26, fat:12 },
+      { keys:['salmon'], label:'salmon', kcal:208, protein:20, fat:13 },
+      { keys:['tuna'], label:'tuna', kcal:132, protein:29, fat:1 },
+      { keys:['sarden','sardine'], label:'sarden', kcal:208, protein:25, fat:11 },
+      { keys:['bacon'], label:'bacon', kcal:541, protein:37, fat:42 },
+      { keys:['kerupuk kulit','krupuk kulit','rambak','pork rind'], label:'kerupuk kulit', kcal:540, protein:60, fat:30 },
+      { keys:['babi','pork'], label:'daging babi', kcal:242, protein:27, fat:14 },
+      { keys:['mentega','butter'], label:'mentega', kcal:717, protein:.9, fat:81 },
+      { keys:['keju','cheese'], label:'keju', kcal:403, protein:25, fat:33 },
+      { keys:['hati','liver'], label:'hati', kcal:135, protein:20, fat:3.6 }
+    ];
+    function estimateFood(text) {
+      const parts = String(text || '').toLowerCase().split(/\s*(?:\+|,|;|\/|\||\n|\bdan\b|\bsama\b|\bplus\b|\bwith\b)\s*/).filter(Boolean);
+      const total = { kcal:0, protein:0, fat:0, items:[] };
+      parts.forEach(part => {
+        const food = foods.find(entry => entry.keys.some(key => part.includes(key)));
+        if (!food) return;
+        const match = part.match(/(\d+(?:[.,]\d+)?)\s*(kg|gram|grams|gr|g|butir|telur|pcs|tusuk|porsi|potong|ekor)?/);
+        const amount = match ? Number(match[1].replace(',','.')) : (food.unit ? 1 : 100);
+        const unit = match?.[2] || (food.unit ? 'butir' : 'g');
+        const multiplier = food.unit && !['g','gr','gram','grams','kg'].includes(unit) ? amount : (unit === 'kg' ? amount * 10 : amount / 100);
+        total.kcal += food.kcal * multiplier; total.protein += food.protein * multiplier; total.fat += food.fat * multiplier;
+        total.items.push(`${food.label} (${amount}${unit === 'g' ? ' g' : ` ${unit}`})`);
+      });
+      return total;
+    }
+    function sortedLogs() { return [...app.logs].sort((a,b) => b.date.localeCompare(a.date) || b.created - a.created); }
+    function weightLogs() { return [...app.logs].filter(x => Number(x.weight) > 0).sort((a,b) => a.date.localeCompare(b.date) || a.created - b.created); }
+    function saveSettings() { app.settings = { startWeight:el('startWeight').value, targetWeight:el('targetWeight').value, proteinGoal:el('proteinGoal').value }; save(); el('settingsStatus').textContent = 'Target tersimpan.'; render(); }
+    function renderChart() {
+      const data = weightLogs(); const svg = el('chart'); const w=610,h=255,l=48,r=18,t=20,b=43;
+      if (!data.length) { svg.innerHTML = `<text x="${w/2}" y="${h/2}" text-anchor="middle">Masukkan berat badan untuk memulai grafik</text>`; return; }
+      const target = Number(app.settings.targetWeight); const all = [...data.map(x=>Number(x.weight)), target].filter(Number.isFinite); const lo=Math.min(...all)-1, hi=Math.max(...all)+1;
+      const x=i => l+(w-l-r)*(data.length===1?.5:i/(data.length-1)); const y=v => t+(h-t-b)*(hi-v)/(hi-lo);
+      const grid=[0,.5,1].map(n => {const value=lo+(hi-lo)*n, yy=y(value); return `<line class="grid" x1="${l}" x2="${w-r}" y1="${yy}" y2="${yy}"/><text x="${l-8}" y="${yy+4}" text-anchor="end">${value.toFixed(1)}</text>`;}).join('');
+      const targetLine=Number.isFinite(target)?`<line class="target" x1="${l}" x2="${w-r}" y1="${y(target)}" y2="${y(target)}"/><text x="${w-r}" y="${y(target)-6}" text-anchor="end">Target ${target.toFixed(1)}</text>`:'';
+      const path=data.map((d,i)=>`${i?'L':'M'}${x(i)},${y(Number(d.weight))}`).join(' ');
+      const dots=data.map((d,i)=>`<circle class="dot" cx="${x(i)}" cy="${y(Number(d.weight))}" r="4"><title>${dateText(d.date)}: ${kg(d.weight)}</title></circle><text x="${x(i)}" y="${h-17}" text-anchor="middle">${dateText(d.date)}</text>`).join('');
+      svg.innerHTML=`${grid}${targetLine}<path class="line" d="${path}"/>${dots}<text x="${w/2}" y="${h-1}" text-anchor="middle">Tanggal</text>`;
+    }
+    function render() {
+      el('startWeight').value=app.settings.startWeight; el('targetWeight').value=app.settings.targetWeight; el('proteinGoal').value=app.settings.proteinGoal;
+      const logs=sortedLogs(), todays=app.logs.filter(x=>x.date===today), weights=weightLogs(), latest=weights.at(-1);
+      el('latestWeight').textContent=latest?kg(latest.weight):'—';
+      const start=Number(app.settings.startWeight), current=Number(latest?.weight); el('weightChange').textContent=Number.isFinite(start)&&Number.isFinite(current)?`${current<=start?'↓':'↑'} ${Math.abs(current-start).toFixed(1)} kg dari awal`:'Tambahkan berat awal';
+      el('todayMeals').textContent=todays.filter(x=>x.food).length; el('todayCalories').textContent=`${todays.reduce((n,x)=>n+Number(x.calories||0),0)} kkal`; el('todayProtein').textContent=`${todays.reduce((n,x)=>n+Number(x.protein||0),0)} g`; el('todayActivity').textContent=`${todays.reduce((n,x)=>n+Number(x.minutes||0),0)} mnt`; el('proteinGoalLabel').textContent=`Target ${app.settings.proteinGoal || 0} g`;
+      const proteinToday=todays.reduce((n,x)=>n+Number(x.protein||0),0), activityToday=todays.reduce((n,x)=>n+Number(x.minutes||0),0), goal=Number(app.settings.proteinGoal||0), feedback=[];
+      if (!todays.length) feedback.push('Belum ada log hari ini. Mulai dari satu menu atau catatan berat badan.');
+      else { if (goal && proteinToday < goal) feedback.push(`Protein tercatat ${proteinToday} g; masih ${goal-proteinToday} g dari target ${goal} g.`); else if (goal) feedback.push(`Protein tercatat ${proteinToday} g; target ${goal} g sudah tercapai.`); if (!activityToday) feedback.push('Aktivitas belum dicatat—tambahkan bila ada.'); else feedback.push(`Aktivitas tercatat ${activityToday} menit.`); if (!todays.some(x=>x.weight)) feedback.push('Berat belum dicatat hari ini; tidak apa-apa, fokus pada tren mingguan.'); }
+      el('feedback').textContent=feedback.join(' ');
+      const weekStart=new Date(`${today}T12:00:00`); weekStart.setDate(weekStart.getDate()-6); const weekKey=weekStart.toISOString().slice(0,10); const weekLogs=app.logs.filter(x=>x.date>=weekKey&&x.date<=today); const weekProtein=weekLogs.reduce((n,x)=>n+Number(x.protein||0),0); const weekActivity=weekLogs.reduce((n,x)=>n+Number(x.minutes||0),0); const weekWeights=weightLogs().filter(x=>x.date>=weekKey); const average=weekWeights.length?weekWeights.reduce((n,x)=>n+Number(x.weight),0)/weekWeights.length:null; el('weeklyReview').textContent=weekLogs.length?`7 hari terakhir: ${weekLogs.filter(x=>x.food).length} menu, ${weekProtein} g protein, ${weekActivity} menit aktivitas${average?`, rata-rata berat ${average.toFixed(1)} kg`:''}.`:'Belum ada log dalam 7 hari terakhir.';
+      const dates=[...new Set(app.logs.map(x=>x.date))].sort().reverse(); let streak=0, cursor=new Date(`${today}T12:00:00`); while(dates.includes(cursor.toISOString().slice(0,10))){streak++;cursor.setDate(cursor.getDate()-1)} el('streak').textContent=streak?`● Streak: ${streak} hari`:'● Siap mulai';
+      el('logs').innerHTML=logs.length?logs.slice(0,12).map(x=>`<li class="log"><span class="log-date">${dayText(x.date)}<br>${dateText(x.date).slice(0,2)}</span><span><strong>${esc(x.food)||'Log harian'}</strong><small>${x.calories?`${x.calories} kkal · `:''}${x.fat?`${x.fat} g lemak · `:''}${esc(x.activity)||'Tidak ada aktivitas'}${x.minutes?` · ${x.minutes} mnt`:''}${x.note?` · ${esc(x.note)}`:''}</small></span><strong>${x.protein?`${x.protein} g`:x.weight?kg(x.weight):''}</strong></li>`).join(''):'<li class="empty">Belum ada log. Kamu bisa mulai dari hari Senin.</li>';
+      renderLogActions(logs);
+      renderChart();
+    }
+    function renderLogActions(logs) { document.querySelectorAll('#logs .log').forEach((row,index)=>{ const record=logs[index]; const host=row.lastElementChild; const controls=document.createElement('span'); controls.className='actions'; controls.innerHTML=`<button type="button" class="secondary" data-action="edit" data-id="${record.created}">Edit</button><button type="button" class="danger" data-action="delete" data-id="${record.created}">Hapus</button>`; host.append(controls); }); }
+    function startEdit(record) { editingId=record.created; el('date').value=record.date; el('weight').value=record.weight||''; el('food').value=record.food||''; el('protein').value=record.protein||''; el('fat').value=record.fat||''; el('calories').value=record.calories||''; el('activity').value=record.activity||''; el('minutes').value=record.minutes||''; el('note').value=record.note||''; el('preparation').value=record.preparation||'cooked'; el('submitLog').textContent='Simpan perubahan'; el('cancelEdit').hidden=false; el('logStatus').textContent='Mode edit aktif.'; }
+    function cancelEdit() { editingId=null; el('logForm').reset(); el('date').value=today; el('preparation').value='cooked'; el('submitLog').textContent='Simpan log'; el('cancelEdit').hidden=true; el('logStatus').textContent=''; }
+    el('date').value=monday;
+    el('saveSettings').addEventListener('click',saveSettings);
+    el('food').addEventListener('input',()=>{const estimate=estimateFood(el('food').value); if(!estimate.items.length){el('foodEstimate').textContent='Belum mengenali menu. Coba: 250 g ribeye + 3 telur.';return} el('protein').value=Math.round(estimate.protein); el('fat').value=Math.round(estimate.fat); el('calories').value=Math.round(estimate.kcal); el('foodEstimate').textContent=`Estimasi: ${Math.round(estimate.kcal)} kkal · ${Math.round(estimate.protein)} g protein · ${Math.round(estimate.fat)} g lemak (${estimate.items.join(', ')})`;});
+    el('logForm').addEventListener('submit',e=>{e.preventDefault(); const item={date:el('date').value,weight:el('weight').value,food:el('food').value.trim(),protein:el('protein').value||0,fat:el('fat').value||0,calories:el('calories').value||0,activity:el('activity').value.trim(),minutes:el('minutes').value||0,note:el('note').value.trim(),created:Date.now()}; if(!item.weight&&!item.food&&!item.activity&&!item.note){el('logStatus').textContent='Isi minimal satu data log.';return} app.logs.push(item); if(!app.settings.startWeight&&item.weight) app.settings.startWeight=item.weight; save(); e.target.reset(); el('date').value=today; el('foodEstimate').textContent='Satu kolom bisa banyak menu. Pisahkan dengan +, koma, /, “dan”, atau baris baru.'; el('logStatus').textContent='Log tersimpan.'; render();});
+    document.querySelectorAll('.preset').forEach(button=>button.addEventListener('click',()=>{el('food').value=button.dataset.menu; el('food').dispatchEvent(new Event('input'));}));
+    el('cancelEdit').addEventListener('click',cancelEdit);
+    el('logs').addEventListener('click',event=>{const button=event.target.closest('button[data-action]'); if(!button)return; const id=Number(button.dataset.id); const index=app.logs.findIndex(x=>x.created===id); if(index<0)return; if(button.dataset.action==='edit')startEdit(app.logs[index]); else if(confirm('Hapus log ini?')){app.logs.splice(index,1);save();render();}});
+    el('logForm').addEventListener('submit',event=>{event.preventDefault(); event.stopImmediatePropagation(); const item={date:el('date').value,weight:el('weight').value,food:el('food').value.trim(),preparation:el('preparation').value,protein:el('protein').value||0,fat:el('fat').value||0,calories:el('calories').value||0,activity:el('activity').value.trim(),minutes:el('minutes').value||0,note:el('note').value.trim(),created:editingId||Date.now()}; if(!item.weight&&!item.food&&!item.activity&&!item.note){el('logStatus').textContent='Isi minimal satu data log.';return} const index=app.logs.findIndex(x=>x.created===editingId); if(index>=0)app.logs[index]=item; else app.logs.push(item); if(!app.settings.startWeight&&item.weight)app.settings.startWeight=item.weight; save(); const wasEdit=index>=0; cancelEdit(); el('logStatus').textContent=wasEdit?'Perubahan disimpan.':'Log tersimpan.'; render();},true);
+    el('exportData').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(app,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`carnivore-daily-${today}.json`;a.click();URL.revokeObjectURL(a.href);el('backupStatus').textContent='Cadangan diunduh.'});
+    el('importData').addEventListener('change',e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const restored=JSON.parse(reader.result);if(!restored.settings||!Array.isArray(restored.logs))throw Error();app=restored;save();render();el('backupStatus').textContent='Cadangan dipulihkan.'}catch{el('backupStatus').textContent='File cadangan tidak valid.'}};reader.readAsText(file);});
+    el('clearData').addEventListener('click',()=>{if(confirm('Hapus semua data dari perangkat ini?')){app=structuredClone(initial);save();render();el('backupStatus').textContent='Semua data dihapus.'}});
+    let installPrompt;
+    window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event; if (el('installApp')) el('installApp').hidden=false;});
+    if (el('installApp')) el('installApp').addEventListener('click',async()=>{if(!installPrompt)return;installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;el('installApp').hidden=true;});
+    if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('./sw.js');
+    el('saveSyncCode').addEventListener('click', async () => {
+      const code = el('syncCode').value.trim();
+      if (!code) { el('syncStatus').textContent = 'Kode tidak boleh kosong.'; return; }
+      setSyncCode(code);
+      await initSync();
+    });
+    render();
+    window.addEventListener('load', () => setTimeout(initSync, 200));
+  </script>
+</body>
+</html>
 
