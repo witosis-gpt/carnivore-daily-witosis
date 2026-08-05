@@ -95,10 +95,28 @@
         </div>
         <p class="status" id="backupStatus" aria-live="polite"></p>
       </article>
+
+      <article class="card wide">
+        <h2>Sinkronisasi antar perangkat</h2>
+        <p class="muted">Isi kode akun yang sama di semua perangkat (laptop &amp; HP) supaya log tersimpan di cloud dan otomatis nyambung di mana pun kamu buka.</p>
+        <div class="settings">
+          <label class="full">Kode akun (rahasia, bebas, contoh: nama-tanggal-lahir)<input id="syncCode" type="text" placeholder="Contoh: budi-carnivore-2025" autocomplete="off"></label>
+        </div>
+        <div class="actions">
+          <button type="button" id="saveSyncCode">Simpan &amp; Sinkronkan</button>
+        </div>
+        <p class="status" id="syncStatus" aria-live="polite">Belum tersinkron.</p>
+      </article>
     </section>
-    <footer>Estimasi nutrisi memakai referensi makanan generik; potongan daging, merek, dan cara masak dapat mengubah hasil. Data disimpan di browser perangkat ini—unduh cadangan secara berkala.</footer>
+    <footer>Estimasi nutrisi memakai referensi makanan generik; potongan daging, merek, dan cara masak dapat mengubah hasil. Data disimpan di browser perangkat ini, dan disinkronkan ke cloud jika kode akun sudah diisi—unduh cadangan secara berkala.</footer>
   </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
+    // ====== ISI 2 BARIS INI SETELAH BIKIN PROJECT SUPABASE ======
+    // Ambil dari: Supabase Dashboard -> Settings -> API
+    const SUPABASE_URL = 'https://nuxmvlwjpxuxlxwgkjvw.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_9t9yUUeuAzFmyLU5O7shdA_B3RTlylp';
+    // ==============================================================
     const STORAGE_KEY = 'carnivore-daily-v1';
     const today = new Date().toISOString().slice(0, 10);
     const monday = (() => { const d = new Date(); const offset = (d.getDay() + 6) % 7; d.setDate(d.getDate() - offset); return d.toISOString().slice(0, 10); })();
@@ -108,7 +126,55 @@
     const el = id => document.getElementById(id);
     const esc = s => String(s || '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
     const kg = v => `${Number(v).toFixed(1)} kg`;
-    const save = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(app));
+    let sbClient = null;
+    let pushTimer = null;
+    function getClient() {
+      if (!SUPABASE_URL.startsWith('http')) return null;
+      if (!sbClient) sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      return sbClient;
+    }
+    const getSyncCode = () => localStorage.getItem('carnivore-sync-code') || '';
+    const setSyncCode = v => localStorage.setItem('carnivore-sync-code', v);
+    async function pullRemote(code) {
+      const client = getClient(); if (!client || !code) return null;
+      const { data, error } = await client.from('tracker_state').select('data').eq('sync_code', code).maybeSingle();
+      if (error) { console.error('pullRemote', error); return null; }
+      return data ? data.data : null;
+    }
+    async function pushRemote(code, payload) {
+      const client = getClient(); if (!client || !code) return false;
+      const { error } = await client.from('tracker_state').upsert({ sync_code: code, data: payload, updated_at: new Date().toISOString() });
+      if (error) { console.error('pushRemote', error); return false; }
+      return true;
+    }
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(app));
+      const code = getSyncCode();
+      if (!code || !getClient()) return;
+      if (el('syncStatus')) el('syncStatus').textContent = 'Menyinkronkan…';
+      clearTimeout(pushTimer);
+      pushTimer = setTimeout(async () => {
+        const ok = await pushRemote(code, app);
+        if (el('syncStatus')) el('syncStatus').textContent = ok ? `Tersinkron ${new Date().toLocaleTimeString('id-ID')}` : 'Gagal sinkron—cek koneksi, log tetap aman di perangkat ini.';
+      }, 700);
+    }
+    async function initSync() {
+      const code = getSyncCode();
+      if (el('syncCode')) el('syncCode').value = code;
+      if (!getClient()) { if (el('syncStatus')) el('syncStatus').textContent = 'Sinkronisasi belum diaktifkan (lihat README).'; return; }
+      if (!code) { if (el('syncStatus')) el('syncStatus').textContent = 'Isi kode akun untuk mengaktifkan sinkronisasi.'; return; }
+      if (el('syncStatus')) el('syncStatus').textContent = 'Memuat data dari cloud…';
+      const remote = await pullRemote(code);
+      if (remote) {
+        app = remote;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(app));
+        render();
+        if (el('syncStatus')) el('syncStatus').textContent = `Data cloud dimuat ${new Date().toLocaleTimeString('id-ID')}`;
+      } else {
+        await pushRemote(code, app);
+        if (el('syncStatus')) el('syncStatus').textContent = 'Data perangkat ini diunggah ke cloud.';
+      }
+    }
     const dateText = d => new Intl.DateTimeFormat('id-ID',{day:'2-digit',month:'short'}).format(new Date(`${d}T12:00:00`));
     const dayText = d => new Intl.DateTimeFormat('id-ID',{weekday:'short'}).format(new Date(`${d}T12:00:00`));
     const foods = [
@@ -194,7 +260,14 @@
     window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;el('installApp').hidden=false;});
     el('installApp').addEventListener('click',async()=>{if(!installPrompt)return;installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;el('installApp').hidden=true;});
     if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('./sw.js');
+    el('saveSyncCode').addEventListener('click', async () => {
+      const code = el('syncCode').value.trim();
+      if (!code) { el('syncStatus').textContent = 'Kode tidak boleh kosong.'; return; }
+      setSyncCode(code);
+      await initSync();
+    });
     render();
+    initSync();
   </script>
 </body>
 </html>
