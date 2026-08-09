@@ -54,7 +54,7 @@
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('open')) close(); });
 
-  ['meal-planner-loader.js?v=1','menu-identifier.js?v=1'].forEach(src => {
+  ['branding.js?v=1','meal-planner-loader.js?v=1','menu-identifier.js?v=1'].forEach(src => {
     const script = document.createElement('script');
     script.src = src;
     script.defer = true;
