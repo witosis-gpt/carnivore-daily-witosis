@@ -1,6 +1,6 @@
 {
-  "name": "Carnivore Daily",
-  "short_name": "Carnivore",
+  "name": "Witosis Carnivore Journey",
+  "short_name": "Witosis Carnivore",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f8f8f3",
