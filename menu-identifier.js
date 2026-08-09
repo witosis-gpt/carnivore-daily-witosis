@@ -9,7 +9,7 @@
   const DB = [
     ['ayam',['ayam','chicken'],298,18.2,25,0,200],
     ['bebek',['bebek','itik','duck'],321,16,28.6,0,180],
-    ['kulit ayam',['kulit ayam','sate kulit','keripik kulit ayam'],454,20,40,0,80],
+    ['kulit ayam',['kulit ayam','sate kulit','keripik kulit ayam'],454,20,40,0,80,'estimasi'],
     ['sapi daging kurus',['sapi daging kurus','daging sapi kurus'],174,19.6,10,0,200],
     ['sapi lemak sedang',['sapi lemak sedang'],201,18.8,14,0,200],
     ['sapi daging gemuk',['sapi daging gemuk','daging sapi gemuk'],273,17.5,22,0,180],
@@ -40,11 +40,12 @@
     ['usus sapi',['usus sapi'],126,14,7.2,1.5,150],
     ['otak sapi',['otak sapi'],123,10.4,8.6,.8,140],
     ['ginjal sapi',['ginjal sapi'],137,15,8.1,.9,150],
-    ['sosis sapi',['sosis sapi','beef sausage'],448,14.5,42.3,2.3,120],
-    ['kornet sapi',['kornet sapi','corned beef','kornet'],289,16,25,0,120],
-    ['sarden kaleng',['sarden kaleng','sardines kaleng'],338,21.1,27,1,150],
-    ['daging sapi asap',['daging sapi asap','daging asap','sapi asap'],182,32,6,0,160]
-  ].map(([name,aliases,kcal,p,f,c,g]) => ({name,aliases,kcal,p,f,c,g}));
+    ['sosis sapi',['sosis sapi','beef sausage','sosis worst','worst'],448,14.5,42.3,2.3,120,'processed'],
+    ['sosis hati',['sosis hati','liver sausage','liverwurst','liverworst','leverworst'],448,14.5,42.3,2.3,100,'processed-estimasi'],
+    ['kornet sapi',['kornet sapi','corned beef','kornet'],289,16,25,0,120,'processed'],
+    ['sarden kaleng',['sarden kaleng','sardines kaleng'],338,21.1,27,1,150,'processed'],
+    ['daging sapi asap',['daging sapi asap','daging asap','sapi asap'],182,32,6,0,160,'processed']
+  ].map(([name,aliases,kcal,p,f,c,g,note='']) => ({name,aliases,kcal,p,f,c,g,note}));
 
   const normalize = value => String(value || '')
     .toLowerCase()
@@ -84,8 +85,9 @@
     return items.reduce((t,x) => {
       t.kcal += x.kcal; t.p += x.p; t.f += x.f; t.c += x.c;
       t.labels.push(`${x.food.name} ${Math.round(x.grams)} g`);
+      if (x.food.note) t.notes.add(x.food.note);
       return t;
-    }, {kcal:0,p:0,f:0,c:0,labels:[]});
+    }, {kcal:0,p:0,f:0,c:0,labels:[],notes:new Set()});
   }
 
   input.addEventListener('input', () => {
@@ -94,7 +96,8 @@
     calories.value = Math.round(result.kcal);
     protein.value = Math.round(result.p);
     fat.value = Math.round(result.f);
-    estimate.textContent = `DB lokal: ${Math.round(result.kcal)} kkal · ${Math.round(result.p)} g protein · ${Math.round(result.f)} g lemak · ${result.c.toFixed(1)} g karbo (${result.labels.join(' + ')})`;
+    const note = result.notes.size ? ` · ${[...result.notes].join(', ')}` : '';
+    estimate.textContent = `DB lokal: ${Math.round(result.kcal)} kkal · ${Math.round(result.p)} g protein · ${Math.round(result.f)} g lemak · ${result.c.toFixed(1)} g karbo (${result.labels.join(' + ')})${note}`;
   });
 
   const list = document.createElement('datalist');
