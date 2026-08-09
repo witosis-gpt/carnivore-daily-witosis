@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#152331">
+  <title>Generate Output · Carnivore Daily</title>
+  <style>
+    :root{--ink:#17211c;--muted:#66716a;--paper:#f5f6f2;--panel:#fff;--line:#dfe5de;--green:#2f9348;--green-dark:#147b2b;--yellow:#f5be22;--future:#e3e5e4;--not:#7b7e7d;--navy:#172634;--blue:#2f68b1;--purple:#6a45a3;--gold:#bd861d}
+    *{box-sizing:border-box} body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    main{width:min(1500px,calc(100% - 24px));margin:0 auto;padding:22px 0 38px}.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}.topbar h1{font-size:1.25rem;margin:0}.topbar p{margin:2px 0 0;color:var(--muted)}
+    button,.btn{border:0;border-radius:10px;padding:10px 13px;font:inherit;font-weight:750;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:7px}.btn-primary{background:#1e7a54;color:#fff}.btn-secondary{background:#e8ece7;color:var(--ink)}.actions{display:flex;gap:8px;flex-wrap:wrap}
+    .report{background:#fff;border:1px solid var(--line);box-shadow:0 10px 36px rgba(21,35,49,.06);overflow:hidden}.report-head{background:linear-gradient(120deg,#10171c,#161c20);color:#fff;padding:18px 20px;display:flex;align-items:flex-start;justify-content:space-between;gap:18px}.report-head h2{font-size:clamp(1.3rem,3vw,2rem);margin:0 0 3px;letter-spacing:.01em}.sub{font-size:1.02rem;color:#e6e8e7}.sub strong{color:#ffd23e}.legend{display:flex;gap:18px;flex-wrap:wrap;align-items:center;padding-top:4px}.legend span{display:flex;align-items:center;gap:7px;white-space:nowrap}.swatch{width:25px;height:25px;border-radius:2px;display:inline-block}.done{background:linear-gradient(#37a24c,#23863b)}.today{background:linear-gradient(#ffc935,#edae0f)}.upcoming{background:linear-gradient(#f1f2f2,#d8dad9)}.not-started{background:linear-gradient(#858786,#666968)}
+    .scroll{overflow-x:auto}.gantt{min-width:1220px;display:grid;grid-template-columns:185px 100px repeat(30,minmax(28px,1fr));border-top:2px solid #cfd6d2}.cell{min-height:62px;border-right:1px solid rgba(255,255,255,.75);border-bottom:1px solid #dfe3df;display:flex;align-items:center;justify-content:center;text-align:center}.hcell{background:var(--navy);color:#fff;font-weight:800;min-height:70px}.phase{align-items:flex-start;justify-content:center;flex-direction:column;text-align:left;padding:10px;background:#fff}.phase strong{color:var(--green-dark);font-size:.92rem}.phase small{display:block;margin-top:5px;font-size:.78rem;line-height:1.35;color:#1d2521}.range{background:#fff;font-size:1rem;font-weight:800}.day-head{min-height:70px;background:var(--navy);color:#fff;font-weight:800;align-items:flex-end;padding-bottom:8px}.bar.done{color:#fff;font-size:1.25rem;font-weight:900}.bar.today{color:#222}.bar.upcoming{background:linear-gradient(135deg,#f2f3f3,#d9dbda)}.bar.not-started{background:linear-gradient(135deg,#8d8f8f,#747676)}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;padding:17px 10px}.stat{border:1.5px solid;border-radius:14px;min-height:112px;padding:14px 18px;display:flex;align-items:center;gap:16px;background:#fff}.stat .ico{font-size:2.2rem;width:58px;text-align:center}.stat span{display:block;font-size:.78rem;font-weight:800}.stat strong{display:block;font-size:1.65rem;margin-top:4px}.stat small{font-size:.85rem}.stat.green{border-color:#4b9f62}.stat.blue{border-color:#4c78bd}.stat.gold{border-color:#c9972d}.stat.purple{border-color:#8266b2}.stat.green .ico,.stat.green strong{color:#348b4b}.stat.blue .ico,.stat.blue strong{color:#3268b3}.stat.gold .ico,.stat.gold strong{color:#b88015}.stat.purple .ico,.stat.purple strong{color:#64429b}
+    .notes{margin:4px 10px 14px;border:1px solid #d8dfda;border-radius:13px;display:grid;grid-template-columns:1fr 1fr;gap:0;padding:13px 18px}.notes section{padding:0 18px}.notes section+section{border-left:1px solid #d5dbd7}.notes h3{margin:0 0 7px;font-size:.9rem}.notes ul{margin:0;padding-left:19px}.notes li{margin:2px 0}.foodline{font-size:1rem}.foodline .emoji{font-size:1.25rem;letter-spacing:4px}.focus{font-size:.8rem;color:#4d5851;font-style:italic;margin-top:3px}.empty{padding:60px 20px;text-align:center;color:var(--muted)}
+    .hint{margin-top:12px;color:var(--muted);font-size:.82rem}
+    @media(max-width:800px){main{width:min(100% - 12px,1500px);padding-top:10px}.topbar{align-items:flex-start;flex-direction:column}.report-head{flex-direction:column}.legend{gap:10px}.stats{grid-template-columns:1fr 1fr;gap:8px}.notes{grid-template-columns:1fr}.notes section{padding:8px 4px}.notes section+section{border-left:0;border-top:1px solid #d5dbd7}.stat{min-height:98px;padding:10px}.stat .ico{width:38px;font-size:1.7rem}.stat strong{font-size:1.25rem}}
+    @media(max-width:480px){.stats{grid-template-columns:1fr}.actions{width:100%}.actions .btn,.actions button{flex:1;justify-content:center}}
+    @media print{body{background:#fff}main{width:100%;padding:0}.topbar,.hint{display:none}.report{border:0;box-shadow:none}.scroll{overflow:visible}.gantt{min-width:0}.cell{min-height:45px}.hcell,.day-head{min-height:52px}.stats{gap:8px;padding:10px 4px}.stat{min-height:90px;padding:8px}.notes{margin:4px}.report-head{padding:12px 14px}.report-head h2{font-size:1.35rem}@page{size:landscape;margin:8mm}}
+  </style>
+</head>
+<body>
+<main>
+  <div class="topbar">
+    <div><h1>Generate Output</h1><p>Ringkasan visual otomatis dari data Carnivore Daily.</p></div>
+    <div class="actions"><a class="btn btn-secondary" href="index.html">← Tracker</a><button class="btn-secondary" id="refresh">↻ Refresh</button><button class="btn-primary" id="downloadPng">⬇ PNG</button><button class="btn-primary" id="printPdf">🖨 PDF / Print</button></div>
+  </div>
+  <section id="report" class="report" aria-live="polite"><div class="empty">Memuat data tracker…</div></section>
+  <p class="hint">Hari diet dihitung dari tanggal log paling awal. Jika ada beberapa log pada hari yang sama, semuanya tetap dihitung sebagai satu hari kalender.</p>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+  const STORAGE_KEY='carnivore-daily-v1';
+  const SUPABASE_URL='https://nuxmvlwjpxuxlxwgkjvw.supabase.co';
+  const SUPABASE_ANON_KEY='sb_publishable_9t9yUUeuAzFmyLU5O7shdA_B3RTlylp';
+  const TODAY=new Date().toISOString().slice(0,10);
+  const el=id=>document.getElementById(id);
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const dateObj=d=>new Date(`${d}T12:00:00`);
+  const fmtDate=d=>new Intl.DateTimeFormat('id-ID',{day:'2-digit',month:'short',year:'numeric'}).format(dateObj(d));
+  function localApp(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')}catch{return null}}
+  async function cloudApp(){
+    const code=localStorage.getItem('carnivore-sync-code')||'';
+    if(!code||typeof supabase==='undefined')return null;
+    try{const client=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);const {data,error}=await client.from('tracker_state').select('data').eq('sync_code',code).maybeSingle();if(error)throw error;return data?.data||null}catch(err){console.warn('Cloud load failed',err);return null}
+  }
+  function calcDay(start,end=TODAY){return Math.floor((dateObj(end)-dateObj(start))/86400000)+1}
+  function phaseFor(day){if(day<=7)return ['ADAPTASI','Adaptasi tubuh ke pola makan carnivore'];if(day<=14)return ['STABILISASI','Energi mulai stabil, craving berkurang'];if(day<=21)return ['PENYESUAIAN','Adaptasi makin kuat, fokus ke konsistensi'];return ['KONSISTENSI & HASIL','Hasil lebih terlihat, pertahankan pola']}
+  function noteSet(day,loss){
+    const notes=[];
+    if(day<=3)notes.push('Fase adaptasi awal: perubahan lapar, energi, atau pencernaan masih mungkin terjadi.');
+    else if(day<=7)notes.push('Adaptasi minggu pertama hampir selesai; lanjutkan konsistensi pola makan.');
+    else if(day<=14)notes.push('Masuk fase stabilisasi; lihat tren energi, rasa lapar, dan konsistensi protein.');
+    else if(day<=21)notes.push('Fokus utama sekarang konsistensi dan kualitas makanan, bukan perubahan harian.');
+    else notes.push('Fase akhir 30 hari: pertahankan pola dan siapkan evaluasi hasil.');
+    notes.push('Pastikan cairan dan elektrolit cukup, terutama bila asupan karbohidrat sangat rendah.');
+    if(Number.isFinite(loss))notes.push(loss>0?`Berat turun ${loss.toFixed(1)} kg dari berat awal.`:loss<0?`Berat naik ${Math.abs(loss).toFixed(1)} kg dari berat awal; lihat tren beberapa hari, bukan satu angka.`:'Berat saat ini sama dengan berat awal.');
+    notes.push(day>=30?'Target 30 hari tercapai — waktunya evaluasi.':'Target berikutnya: lanjut sampai Day 30 dan evaluasi tren keseluruhan.');
+    return notes;
+  }
+  function makeGantt(day){
+    const phases=[{name:'ADAPTASI',desc:'Adaptasi tubuh ke pola makan carnivore',from:1,to:7},{name:'STABILISASI',desc:'Energi mulai stabil, craving berkurang',from:8,to:14},{name:'PENYESUAIAN',desc:'Adaptasi makin kuat, fokus ke konsistensi',from:15,to:21},{name:'KONSISTENSI & HASIL',desc:'Hasil lebih terlihat, pertahankan pola',from:22,to:30}];
+    let html='<div class="cell hcell">PHASE</div><div class="cell hcell">DAY<br>RANGE</div>'+Array.from({length:30},(_,i)=>`<div class="cell day-head">${i+1}</div>`).join('');
+    phases.forEach(p=>{html+=`<div class="cell phase"><strong>${p.name}</strong><small>${p.desc}</small></div><div class="cell range">${p.from} – ${p.to}</div>`;for(let d=1;d<=30;d++){let cls='not-started',mark='';if(d<day){cls='done';mark='✓'}else if(d===day){cls='today'}else if(d>day&&d<=p.to&&d>=p.from){cls='upcoming'};html+=`<div class="cell bar ${cls}">${mark}</div>`}});
+    return html;
+  }
+  function render(app){
+    const logs=Array.isArray(app?.logs)?app.logs:[];
+    if(!logs.length){el('report').innerHTML='<div class="empty"><strong>Belum ada log.</strong><br>Tambahkan data di tracker dulu, lalu buka Generate Output lagi.</div>';return}
+    const dates=[...new Set(logs.map(x=>x.date).filter(Boolean))].sort();
+    const startDate=dates[0];
+    const rawDay=calcDay(startDate);const day=Math.max(1,Math.min(30,rawDay));
+    const weights=logs.filter(x=>Number(x.weight)>0).sort((a,b)=>a.date.localeCompare(b.date)||(a.created||0)-(b.created||0));
+    const latest=weights.at(-1);const startSetting=Number(app?.settings?.startWeight);const startWeight=Number.isFinite(startSetting)&&startSetting>0?startSetting:Number(weights[0]?.weight);const currentWeight=Number(latest?.weight);const loss=Number.isFinite(startWeight)&&Number.isFinite(currentWeight)?startWeight-currentWeight:NaN;
+    const progress=(day/30*100).toFixed(1);const [phaseName]=phaseFor(day);const notes=noteSet(day,loss);
+    el('report').innerHTML=`
+      <div class="report-head"><div><h2>30 DAY CARNIVORE DIET – GANTT CHART</h2><div class="sub">Start: <b>${fmtDate(startDate)}</b> &nbsp;|&nbsp; <strong>Current: Day ${day}</strong> &nbsp;|&nbsp; Target: Day 30</div></div><div class="legend"><span><i class="swatch done"></i>Completed</span><span><i class="swatch today"></i>Today</span><span><i class="swatch upcoming"></i>Upcoming</span><span><i class="swatch not-started"></i>Not Started</span></div></div>
+      <div class="scroll"><div class="gantt">${makeGantt(day)}</div></div>
+      <div class="stats">
+        <div class="stat green"><div class="ico">🎯</div><div><span>PROGRESS OVERALL</span><strong>${progress}%</strong><small>${day} / 30 Hari</small></div></div>
+        <div class="stat blue"><div class="ico">🗓️</div><div><span>HARI INI</span><strong>DAY ${day}</strong><small>${rawDay>30?'30 hari selesai':'On Track'} · ${phaseName}</small></div></div>
+        <div class="stat gold"><div class="ico">⚖️</div><div><span>BERAT BADAN</span><strong>${Number.isFinite(currentWeight)?currentWeight.toFixed(1)+' kg':'—'}</strong><small>${latest?'Update '+fmtDate(latest.date):'Belum ada data'}</small></div></div>
+        <div class="stat purple"><div class="ico">📈</div><div><span>TARGET</span><strong>DAY 30</strong><small>${rawDay>=30?'Selesai & Evaluasi':'Lanjut & Evaluasi'}</small></div></div>
+      </div>
+      <div class="notes"><section><h3>💡 CATATAN:</h3><ul>${notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul></section><section><h3>MAKANAN UTAMA HARIAN</h3><div class="foodline"><div class="emoji">🥩 🍗 🐟 🦐 🦑 🫀 🥚</div>Sapi, Ayam, Ikan, Udang, Cumi, Ampela/Hati, Telur</div><div class="focus">Fokus: protein hewani berkualitas, cairan dan elektrolit secukupnya.</div></section></div>`;
+  }
+  async function load(){const local=localApp();render(local||{logs:[]});const remote=await cloudApp();if(remote){localStorage.setItem(STORAGE_KEY,JSON.stringify(remote));render(remote)}}
+  el('refresh').addEventListener('click',load);
+  el('printPdf').addEventListener('click',()=>window.print());
+  el('downloadPng').addEventListener('click',async()=>{const btn=el('downloadPng');btn.disabled=true;btn.textContent='Membuat PNG…';try{if(typeof html2canvas==='undefined')throw new Error('html2canvas belum termuat');const canvas=await html2canvas(el('report'),{scale:2,backgroundColor:'#ffffff',useCORS:true,windowWidth:1500});const a=document.createElement('a');a.download=`carnivore-gantt-${TODAY}.png`;a.href=canvas.toDataURL('image/png');a.click()}catch(err){alert('PNG gagal dibuat. Gunakan PDF / Print dulu.')}finally{btn.disabled=false;btn.textContent='⬇ PNG'}});
+  load();
+</script>
+</body>
+</html>
