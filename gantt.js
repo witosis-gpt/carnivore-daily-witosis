@@ -40,7 +40,7 @@
 
   const frame = document.getElementById('ganttFrame');
   const open = () => {
-    frame.src = `output.html?v=${Date.now()}`;
+    frame.src = `output-v2.html?v=${Date.now()}`;
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
   };
