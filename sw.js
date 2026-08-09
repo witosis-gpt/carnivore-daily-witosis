@@ -1,5 +1,5 @@
-const CACHE = 'carnivore-daily-v5';
-const ASSETS = ['./', './index.html', './gantt.js', './meal-planner.js', './output.html', './manifest.webmanifest'];
+const CACHE = 'carnivore-daily-v6';
+const ASSETS = ['./', './index.html', './gantt.js', './meal-planner.js', './meal-planner-loader.js', './menu-identifier.js', './output.html', './manifest.webmanifest'];
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
