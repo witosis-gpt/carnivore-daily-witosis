@@ -55,7 +55,7 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('open')) close(); });
 
   const plannerScript = document.createElement('script');
-  plannerScript.src = `meal-planner.js?v=1`;
+  plannerScript.src = `meal-planner-loader.js?v=1`;
   plannerScript.defer = true;
   document.body.appendChild(plannerScript);
 })();
