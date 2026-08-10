@@ -8,9 +8,10 @@
     .gantt-overlay{position:fixed;inset:0;z-index:99999;background:rgba(10,18,14,.78);display:none;padding:12px}
     .gantt-overlay.open{display:flex;flex-direction:column}
     .gantt-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;padding:10px 12px;border-radius:14px 14px 0 0}
-    .gantt-toolbar strong{font-size:.95rem}.gantt-close{border:0;border-radius:9px;background:#edf0ea;color:#1c2420;padding:9px 12px;font-weight:800;cursor:pointer}
+    .gantt-toolbar strong{font-size:.95rem}.gantt-toolbar-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.gantt-tool,.gantt-close{border:0;border-radius:9px;background:#edf0ea;color:#1c2420;padding:9px 11px;font-weight:800;cursor:pointer}.gantt-tool.primary{background:#1e7a54;color:#fff}
     .gantt-frame{width:100%;height:calc(100vh - 70px);border:0;background:#fff;border-radius:0 0 14px 14px}
-    @media(max-width:460px){.generate-output-wrap{width:100%;justify-content:space-between}.generate-output-btn{flex:1}.gantt-overlay{padding:5px}.gantt-frame{height:calc(100vh - 58px)}}
+    @media(max-width:620px){.gantt-toolbar{align-items:flex-start;flex-direction:column}.gantt-toolbar-actions{width:100%;justify-content:flex-start}.gantt-tool,.gantt-close{flex:1}.gantt-frame{height:calc(100vh - 118px)}}
+    @media(max-width:460px){.generate-output-wrap{width:100%;justify-content:space-between}.generate-output-btn{flex:1}.gantt-overlay{padding:5px}}
   `;
   document.head.appendChild(style);
 
@@ -34,13 +35,22 @@
   overlay.className = 'gantt-overlay';
   overlay.id = 'ganttOverlay';
   overlay.innerHTML = `
-    <div class="gantt-toolbar"><strong>30-Day Carnivore Diet · Gantt Output</strong><button class="gantt-close" type="button" id="closeGantt">✕ Tutup</button></div>
+    <div class="gantt-toolbar">
+      <strong>30-Day Carnivore Diet · Gantt Output</strong>
+      <div class="gantt-toolbar-actions">
+        <button class="gantt-tool" type="button" id="refreshGantt">↻ Refresh</button>
+        <button class="gantt-tool primary" type="button" id="downloadGanttPng">⬇ PNG</button>
+        <button class="gantt-tool primary" type="button" id="printGanttPdf">🖨 PDF / Print</button>
+        <button class="gantt-close" type="button" id="closeGantt">✕ Tutup</button>
+      </div>
+    </div>
     <iframe class="gantt-frame" id="ganttFrame" title="Generate Output Carnivore Daily"></iframe>`;
   document.body.appendChild(overlay);
 
   const frame = document.getElementById('ganttFrame');
+  const refreshFrame = () => { frame.src = `output-v2.html?v=${Date.now()}`; };
   const open = () => {
-    frame.src = `output-v2.html?v=${Date.now()}`;
+    refreshFrame();
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
   };
@@ -49,7 +59,51 @@
     document.body.style.overflow = '';
   };
 
+  async function ensureHtml2Canvas(doc) {
+    if (doc.defaultView.html2canvas) return doc.defaultView.html2canvas;
+    await new Promise((resolve, reject) => {
+      const s = doc.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+      s.onload = resolve;
+      s.onerror = reject;
+      doc.head.appendChild(s);
+    });
+    return doc.defaultView.html2canvas;
+  }
+
+  async function downloadPng() {
+    try {
+      const doc = frame.contentDocument;
+      if (!doc) throw new Error('Output belum siap');
+      const report = doc.getElementById('report');
+      if (!report) throw new Error('Report belum ditemukan');
+      const html2canvas = await ensureHtml2Canvas(doc);
+      const canvas = await html2canvas(report, {scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false});
+      const link = document.createElement('a');
+      link.download = `witosis-carnivore-gantt-${new Date().toISOString().slice(0,10)}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (err) {
+      console.error(err);
+      alert('Gagal membuat PNG. Coba Refresh lalu ulangi.');
+    }
+  }
+
+  function printPdf() {
+    try {
+      if (!frame.contentWindow) throw new Error('Output belum siap');
+      frame.contentWindow.focus();
+      frame.contentWindow.print();
+    } catch (err) {
+      console.error(err);
+      alert('Gagal membuka Print/PDF. Coba Refresh lalu ulangi.');
+    }
+  }
+
   button.addEventListener('click', open);
+  document.getElementById('refreshGantt').addEventListener('click', refreshFrame);
+  document.getElementById('downloadGanttPng').addEventListener('click', downloadPng);
+  document.getElementById('printGanttPdf').addEventListener('click', printPdf);
   document.getElementById('closeGantt').addEventListener('click', close);
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('open')) close(); });
