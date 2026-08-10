@@ -40,6 +40,8 @@
     ['usus sapi',['usus sapi'],126,14,7.2,1.5,150],
     ['otak sapi',['otak sapi'],123,10.4,8.6,.8,140],
     ['ginjal sapi',['ginjal sapi'],137,15,8.1,.9,150],
+    ['cheddar singles',['cheddar singles','cheddar single','keju cheddar slice','cheddar slice','keju slice','single cheese'],403,24.9,33.1,1.3,20,'dairy-relaxed'],
+    ['mozzarella',['mozzarella','keju mozzarella'],300,22.2,22.4,2.2,30,'dairy-relaxed'],
     ['sosis sapi',['sosis sapi','beef sausage','sosis worst','worst'],448,14.5,42.3,2.3,120,'processed'],
     ['sosis hati',['sosis hati','liver sausage','liverwurst','liverworst','leverworst'],448,14.5,42.3,2.3,100,'processed-estimasi'],
     ['kornet sapi',['kornet sapi','corned beef','kornet'],289,16,25,0,120,'processed'],
@@ -66,13 +68,15 @@
     if (!food) return null;
     const raw = String(part).toLowerCase();
     const gram = raw.match(/(\d+(?:[.,]\d+)?)\s*(kg|gram|grams|gr|g)\b/);
-    const count = raw.match(/(\d+(?:[.,]\d+)?)\s*(butir|pcs|potong|tusuk|ekor|porsi)\b/);
+    const count = raw.match(/(\d+(?:[.,]\d+)?)\s*(butir|pcs|potong|tusuk|ekor|porsi|slice|lembar)\b/);
     let grams = food.g;
     if (gram) {
       const amount = Number(gram[1].replace(',','.'));
       grams = gram[2] === 'kg' ? amount * 1000 : amount;
     } else if (count && food.name.includes('telur')) {
       grams = Number(count[1].replace(',','.')) * 50;
+    } else if (count && food.name.includes('cheddar singles')) {
+      grams = Number(count[1].replace(',','.')) * 20;
     }
     const k = grams / 100;
     return { food, grams, kcal:food.kcal*k, p:food.p*k, f:food.f*k, c:food.c*k };
