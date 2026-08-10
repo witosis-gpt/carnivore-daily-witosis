@@ -11,8 +11,6 @@
     dinner: ['Dinner', '🌙']
   };
 
-  // Database lokal ringkas yang diambil dari master pangan Indonesia di project menu.
-  // Kulit ayam belum punya row TKPI khusus, jadi ditandai sebagai estimasi generik.
   const FOODS = {
     'ayam': {name:'Ayam',cat:'Poultry',kcal:298,p:18.2,f:25,c:0,level:'Strict',verified:true,g:200},
     'bebek-itik': {name:'Bebek',cat:'Poultry',kcal:321,p:16,f:28.6,c:0,level:'Strict',verified:true,g:180},
@@ -47,6 +45,8 @@
     'usus-sapi': {name:'Usus Sapi',cat:'Offal',kcal:126,p:14,f:7.2,c:1.5,level:'Strict',verified:true,g:150},
     'otak-sapi': {name:'Otak Sapi',cat:'Offal',kcal:123,p:10.4,f:8.6,c:.8,level:'Strict',verified:true,g:140},
     'ginjal-sapi': {name:'Ginjal Sapi',cat:'Offal',kcal:137,p:15,f:8.1,c:.9,level:'Strict',verified:true,g:150},
+    'cheddar-singles': {name:'Cheddar Singles',cat:'Dairy',kcal:403,p:24.9,f:33.1,c:1.3,level:'Relaxed',verified:false,g:20},
+    'mozzarella': {name:'Mozzarella',cat:'Dairy',kcal:300,p:22.2,f:22.4,c:2.2,level:'Relaxed',verified:false,g:30},
     'sosis-sapi': {name:'Sosis Sapi',cat:'Processed',kcal:448,p:14.5,f:42.3,c:2.3,level:'Relaxed',verified:false,g:120},
     'kornet-sapi': {name:'Kornet Sapi',cat:'Processed',kcal:289,p:16,f:25,c:0,level:'Relaxed',verified:false,g:120},
     'sarden-kaleng': {name:'Sarden Kaleng',cat:'Processed',kcal:338,p:21.1,f:27,c:1,level:'Relaxed',verified:false,g:150},
@@ -64,10 +64,11 @@
     {slug:'hati-ayam',g:80},
     {slug:'udang',g:100},
     {slug:'cumi',g:100},
-    {slug:'babat',g:100}
+    {slug:'babat',g:100},
+    {slug:'cheddar-singles',g:20},
+    {slug:'mozzarella',g:30}
   ];
 
-  const slugify = value => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
   const combineLevel = (a,b) => a === 'Ketovore' || b === 'Ketovore' ? 'Ketovore' : (a === 'Relaxed' || b === 'Relaxed' ? 'Relaxed' : 'Strict');
   const component = (slug, grams) => ({slug, grams, food:FOODS[slug]});
   const nutrition = components => components.reduce((t,x) => {
@@ -84,11 +85,13 @@
     if (side === 'hati-ayam') return ['Poultry','Beef','Goat/Lamb','Offal','Processed'].includes(cat);
     if (side === 'udang' || side === 'cumi') return ['Poultry','Beef','Fish','Seafood','Processed'].includes(cat);
     if (side === 'babat') return ['Beef','Goat/Lamb','Offal','Processed'].includes(cat);
+    if (side === 'cheddar-singles' || side === 'mozzarella') return ['Poultry','Beef','Goat/Lamb','Egg','Processed'].includes(cat);
     return false;
   }
 
   const MENUS = [];
   Object.entries(FOODS).forEach(([slug,food]) => {
+    if (food.cat === 'Dairy') return;
     PREPS.forEach(prep => {
       const components = [component(slug, food.g)];
       MENUS.push({
@@ -122,7 +125,7 @@
 
   const MENU_BY_ID = new Map(MENUS.map(m => [m.id,m]));
   const mealSlots = count => count === 2 ? ['lunch','dinner'] : ['breakfast','lunch','dinner'];
-  const isBreakfast = menu => ['Egg','Poultry','Offal','Processed'].includes(menu.category) || /telur|sosis|kornet|hati|ampela/i.test(menu.name);
+  const isBreakfast = menu => ['Egg','Poultry','Offal','Processed'].includes(menu.category) || /telur|sosis|kornet|hati|ampela|cheddar|mozzarella/i.test(menu.name);
   const eligible = (level,slot) => MENUS.filter(m => (level === 'Semua' || m.level === level) && (slot !== 'breakfast' || isBreakfast(m)));
   const randomItem = arr => arr[Math.floor(Math.random()*arr.length)];
 
@@ -197,7 +200,7 @@
     const d=new Date(); d.setHours(12,0,0,0); const offset=(d.getDay()+6)%7; d.setDate(d.getDate()-offset); return d;
   }
   function dateForDay(index) {
-    const d=mondayOfCurrentWeek(); d.setDate(d.getDate()+index); return d.toISOString().slice(0,10);
+    const d=mondayOfCurrentWeek(); d.setDate(d.getDate()+index); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   }
   function dailyMeals() {
     const day=state.plan[state.active]||{};
@@ -250,13 +253,13 @@
     const goal=trackerGoal();
     const goalText=goal?`Target protein tracker: <b>${goal} g</b> · plan hari ini ${fmt(total.p)} g (${total.p>=goal?`+${fmt(total.p-goal)}`:`-${fmt(goal-total.p)}`} g).`:'Isi target protein di Carnivore Daily untuk membandingkan plan.';
     body.innerHTML=`
-      <section class="mp-hero"><div><div class="mp-kicker">Local meal database</div><h2>7-Day Meal Plan</h2><p class="muted">${MENUS.length} pilihan menu lokal · ayam, bebek, sapi, ikan, seafood, jeroan, sosis, kornet, kulit, telur.</p></div></section>
+      <section class="mp-hero"><div><div class="mp-kicker">Local meal database</div><h2>7-Day Meal Plan</h2><p class="muted">${MENUS.length} pilihan menu lokal · ayam, bebek, sapi, ikan, seafood, jeroan, sosis, kornet, kulit, telur, cheddar, mozzarella.</p></div></section>
       <section class="mp-controls">
         <label>Frekuensi makan<select id="mpCount"><option value="2" ${state.count===2?'selected':''}>2× / hari</option><option value="3" ${state.count===3?'selected':''}>3× / hari</option></select></label>
         <label>Level<select id="mpLevel"><option ${state.level==='Semua'?'selected':''}>Semua</option><option ${state.level==='Strict'?'selected':''}>Strict</option><option ${state.level==='Relaxed'?'selected':''}>Relaxed</option><option ${state.level==='Ketovore'?'selected':''}>Ketovore</option></select></label>
         <button type="button" class="mp-generate" id="mpWeek">🎲 Generate 7 Hari</button>
       </section>
-      <div class="mp-days">${DAYS.map((d,i)=>`<button type="button" class="mp-day ${state.active===i?'active':''}" data-day="${i}">${d}<small>${dateForDay(i).slice(8,10)}</small></button>`).join('')}</div>
+      <div class="mp-days">${DAYS.map((d,i)=>`<button type="button" class="mp-day ${state.active===i?'active':''}" data-day="${i}">${d}</button>`).join('')}</div>
       <section class="mp-panel">
         <div class="mp-dayhead"><div class="mp-dayhead-row"><div><h3>${DAY_NAMES[state.active]}</h3><div class="muted" style="font-size:.75rem">${dateForDay(state.active)} · ${state.count} kali makan · ${state.level}</div></div><button type="button" class="secondary" id="mpDay">↻ Acak Hari</button></div><div class="mp-summary">${macro('Kalori',fmt(total.kcal),'kcal')}${macro('Protein',fmt(total.p),'g')}${macro('Lemak',fmt(total.f),'g')}${macro('Karbo',total.c.toFixed(1),'g')}</div><div class="mp-goal">${goalText}</div></div>
         <div>${dailyMeals().map(({slot,menu})=>{
@@ -265,7 +268,7 @@
           return `<article class="mp-meal"><div class="mp-meal-grid"><div class="mp-icon">${meta[1]}</div><div><div class="mp-title-row"><div><div class="mp-label">${meta[0]}</div><div class="mp-title">${menu.name}</div><div class="mp-components">${comps}</div></div><div class="mp-actions"><button type="button" class="mp-secondary" data-reroll="${slot}">↻ Ganti</button><button type="button" data-log="${menu.id}">+ Daily Log</button></div></div><div class="mp-nutrients"><span><b>${fmt(menu.nutrition.kcal)}</b> kcal</span><span><b>${fmt(menu.nutrition.p)}</b> g protein</span><span><b>${fmt(menu.nutrition.f)}</b> g lemak</span><span>${menu.level}</span>${menu.nutrition.estimated?'<span class="mp-warning">⚠ ada estimasi</span>':''}</div></div></div></article>`;
         }).join('')}</div>
       </section>
-      <div class="mp-foot">Planner tersimpan di browser. Angka menu kulit dan beberapa processed food ditandai estimasi/pending; nilai menu lainnya berasal dari database pangan lokal yang dipindahkan ke app ini.</div>`;
+      <div class="mp-foot">Planner tersimpan di browser. Kulit, dairy generik, dan beberapa processed food ditandai estimasi/pending; nilai menu lainnya berasal dari database pangan lokal.</div>`;
 
     body.querySelectorAll('[data-day]').forEach(x=>x.addEventListener('click',()=>{state.active=Number(x.dataset.day);saveState();render();}));
     body.querySelectorAll('[data-reroll]').forEach(x=>x.addEventListener('click',()=>randomizeMeal(x.dataset.reroll)));
