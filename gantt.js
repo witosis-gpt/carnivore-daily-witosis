@@ -10,8 +10,9 @@
     .gantt-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;padding:10px 12px;border-radius:14px 14px 0 0}
     .gantt-toolbar strong{font-size:.95rem}.gantt-toolbar-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.gantt-tool,.gantt-close{border:0;border-radius:9px;background:#edf0ea;color:#1c2420;padding:9px 11px;font-weight:800;cursor:pointer}.gantt-tool.primary{background:#1e7a54;color:#fff}
     .gantt-frame{width:100%;height:calc(100vh - 70px);border:0;background:#fff;border-radius:0 0 14px 14px}
+    #chart .weight-value{fill:#1c2420;font-size:11px;font-weight:800;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
     @media(max-width:620px){.gantt-toolbar{align-items:flex-start;flex-direction:column}.gantt-toolbar-actions{width:100%;justify-content:flex-start}.gantt-tool,.gantt-close{flex:1}.gantt-frame{height:calc(100vh - 118px)}}
-    @media(max-width:460px){.generate-output-wrap{width:100%;justify-content:space-between}.generate-output-btn{flex:1}.gantt-overlay{padding:5px}}
+    @media(max-width:460px){.generate-output-wrap{width:100%;justify-content:space-between}.generate-output-btn{flex:1}.gantt-overlay{padding:5px}#chart .weight-value{font-size:10px}}
   `;
   document.head.appendChild(style);
 
@@ -107,6 +108,37 @@
   document.getElementById('closeGantt').addEventListener('click', close);
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('open')) close(); });
+
+  const chart = document.getElementById('chart');
+  function addWeightLabels() {
+    if (!chart) return;
+    chart.querySelectorAll('.weight-value').forEach(node => node.remove());
+    chart.querySelectorAll('circle.dot').forEach(dot => {
+      const title = dot.querySelector('title')?.textContent || '';
+      const match = title.match(/:\s*([0-9]+(?:[.,][0-9]+)?)\s*kg/i);
+      if (!match) return;
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('class', 'weight-value');
+      text.setAttribute('x', dot.getAttribute('cx'));
+      text.setAttribute('y', String(Number(dot.getAttribute('cy')) - 10));
+      text.setAttribute('text-anchor', 'middle');
+      text.textContent = `${Number(match[1].replace(',', '.')).toFixed(1)}`;
+      chart.appendChild(text);
+    });
+  }
+  if (chart) {
+    let labeling = false;
+    const observer = new MutationObserver(() => {
+      if (labeling) return;
+      labeling = true;
+      requestAnimationFrame(() => {
+        addWeightLabels();
+        labeling = false;
+      });
+    });
+    observer.observe(chart, {childList:true, subtree:true});
+    addWeightLabels();
+  }
 
   ['branding.js?v=1','meal-planner-loader.js?v=1','menu-identifier.js?v=1'].forEach(src => {
     const script = document.createElement('script');
