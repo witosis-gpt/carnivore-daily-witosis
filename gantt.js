@@ -140,7 +140,7 @@
     addWeightLabels();
   }
 
-  ['branding.js?v=1','meal-planner-loader.js?v=1','menu-identifier.js?v=1'].forEach(src => {
+  ['branding.js?v=1','meal-planner-loader.js?v=1','menu-identifier.js?v=2'].forEach(src => {
     const script = document.createElement('script');
     script.src = src;
     script.defer = true;

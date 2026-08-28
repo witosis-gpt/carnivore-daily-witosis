@@ -46,7 +46,31 @@
     ['sosis hati',['sosis hati','liver sausage','liverwurst','liverworst','leverworst'],448,14.5,42.3,2.3,100,'processed-estimasi'],
     ['kornet sapi',['kornet sapi','corned beef','kornet'],289,16,25,0,120,'processed'],
     ['sarden kaleng',['sarden kaleng','sardines kaleng'],338,21.1,27,1,150,'processed'],
-    ['daging sapi asap',['daging sapi asap','daging asap','sapi asap'],182,32,6,0,160,'processed']
+    ['daging sapi asap',['daging sapi asap','daging asap','sapi asap'],182,32,6,0,160,'processed'],
+    ['tempe',['tempe','tempe goreng'],193,19,11,8,100,'regular'],
+    ['tempe orek',['tempe orek','orek tempe'],220,12,12,18,100,'warteg-estimasi'],
+    ['tempe balado',['tempe balado'],225,12,14,14,100,'warteg-estimasi'],
+    ['tempe bacem',['tempe bacem'],210,11,10,20,100,'warteg-estimasi'],
+    ['tahu',['tahu','tahu goreng'],145,10,10,4,100,'regular'],
+    ['tahu balado',['tahu balado'],160,9,11,7,100,'warteg-estimasi'],
+    ['tahu kecap',['tahu kecap'],155,8,9,10,100,'warteg-estimasi'],
+    ['tahu cabe garam',['tahu cabe garam'],175,9,12,9,100,'warteg-estimasi'],
+    ['kikil',['kikil','kikil tumis'],145,17,8,3,100,'warteg-estimasi'],
+    ['kikil balado',['kikil balado'],155,18,8,4,100,'warteg-estimasi'],
+    ['kikil cabe ijo',['kikil cabe ijo','kikil cabe hijau'],150,18,8,3,100,'warteg-estimasi'],
+    ['teri goreng warteg',['teri goreng warteg','teri goreng'],290,33,15,6,50,'warteg-estimasi'],
+    ['teri kacang',['teri kacang'],360,25,24,15,60,'warteg-estimasi'],
+    ['tongkol balado',['tongkol balado'],180,23,9,4,120,'warteg-estimasi'],
+    ['kembung balado',['kembung balado'],205,22,12,4,150,'warteg-estimasi'],
+    ['telur balado',['telur balado'],190,12,14,5,100,'warteg-estimasi'],
+    ['ayam balado',['ayam balado'],220,24,12,6,150,'warteg-estimasi'],
+    ['ayam kecap',['ayam kecap'],210,22,10,10,150,'warteg-estimasi'],
+    ['ayam opor',['ayam opor','opor ayam'],215,20,14,6,150,'warteg-estimasi'],
+    ['rendang sapi',['rendang sapi','rendang'],280,23,20,6,120,'warteg-estimasi'],
+    ['semur daging',['semur daging','semur sapi'],220,20,12,12,120,'warteg-estimasi'],
+    ['perkedel kentang',['perkedel kentang','perkedel'],210,5,12,22,80,'warteg-estimasi'],
+    ['tumis kangkung',['tumis kangkung','kangkung'],95,3,6,8,100,'warteg-estimasi'],
+    ['capcay',['capcay','cap cay'],85,4,4,9,120,'warteg-estimasi']
   ].map(([name,aliases,kcal,p,f,c,g,note='']) => ({name,aliases,kcal,p,f,c,g,note}));
 
   const normalize = value => String(value || '')
