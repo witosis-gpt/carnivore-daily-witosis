@@ -14,7 +14,7 @@
     .cards { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; } .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:17px; } .metric-label { display:block; color:var(--muted); font-size:.83rem; } .metric { display:block; margin-top:4px; font-size:1.55rem; letter-spacing:-.04em; } .metric-note { display:block; margin-top:4px; color:var(--muted); font-size:.8rem; }
     .dashboard { display:grid; grid-template-columns:1.22fr .78fr; gap:16px; align-items:start; } .wide { grid-column:1 / -1; } .chart { width:100%; height:auto; display:block; overflow:visible; } .chart text { fill:var(--muted); font-size:11px; } .chart .grid { stroke:var(--line); } .chart .target { stroke:var(--warm); stroke-dasharray:5 4; } .chart .line { fill:none; stroke:var(--accent); stroke-width:3; stroke-linecap:round; stroke-linejoin:round; } .chart .dot { fill:#fff; stroke:var(--accent); stroke-width:2.5; }
     form { display:grid; gap:12px; } .fields { display:grid; grid-template-columns:repeat(2,1fr); gap:11px; } label { display:grid; gap:5px; color:var(--muted); font-size:.82rem; font-weight:650; } input,textarea { width:100%; border:1px solid var(--line); border-radius:9px; padding:10px; background:#fff; color:var(--ink); font:inherit; } textarea { resize:vertical; min-height:72px; } input:focus,textarea:focus { outline:3px solid #cce8d9; border-color:var(--accent); } .full { grid-column:1 / -1; }
-    .actions { display:flex; gap:9px; flex-wrap:wrap; align-items:center; } button,.file-label { border:0; cursor:pointer; border-radius:9px; background:var(--accent); color:#fff; font:inherit; font-weight:700; padding:10px 13px; } button.secondary,.file-label { background:#edf0ea; color:var(--ink); } button.danger { background:transparent; color:var(--danger); padding-left:0; } .file-label input { display:none; } .presets { display:flex; flex-wrap:wrap; gap:7px; } .preset { padding:7px 9px; font-size:.8rem; background:#edf0ea; color:var(--ink); }
+    .actions { display:flex; gap:9px; flex-wrap:wrap; align-items:center; } .menu-link { display:inline-flex; align-items:center; text-decoration:none; border-radius:9px; background:#edf0ea; color:var(--ink); font-weight:700; padding:10px 13px; } .menu-link:hover { background:var(--accent-soft); color:var(--accent); } button,.file-label { border:0; cursor:pointer; border-radius:9px; background:var(--accent); color:#fff; font:inherit; font-weight:700; padding:10px 13px; } button.secondary,.file-label { background:#edf0ea; color:var(--ink); } button.danger { background:transparent; color:var(--danger); padding-left:0; } .file-label input { display:none; } .presets { display:flex; flex-wrap:wrap; gap:7px; } .preset { padding:7px 9px; font-size:.8rem; background:#edf0ea; color:var(--ink); }
     .logs { padding:0; margin:0; list-style:none; } .log { display:grid; grid-template-columns:auto 1fr auto; gap:10px; padding:11px 0; border-bottom:1px solid var(--line); align-items:center; } .log:last-child { border:0; padding-bottom:0; } .log-date { display:grid; place-items:center; width:43px; height:43px; border-radius:10px; background:var(--accent-soft); color:var(--accent); font-size:.75rem; font-weight:800; line-height:1.1; text-align:center; } .log strong { display:block; } .log small { color:var(--muted); } .empty { padding:18px 0 4px; color:var(--muted); text-align:center; }
     .settings { display:grid; grid-template-columns:1fr 1fr; gap:11px; margin-bottom:14px; } .status { min-height:1.4em; color:var(--accent); font-size:.85rem; } footer { margin-top:22px; color:var(--muted); font-size:.78rem; }
     @media (max-width:780px) { .cards { grid-template-columns:repeat(2,1fr); } .dashboard { grid-template-columns:1fr; } } @media (max-width:460px) { main { width:min(100% - 22px,1080px); padding-top:22px; } header { align-items:flex-start; flex-direction:column; margin-bottom:20px; } .fields,.settings { grid-template-columns:1fr; } .cards { gap:9px; } .card { padding:14px; } }
@@ -24,7 +24,7 @@
   <main>
     <header>
       <div><h1>Carnivore Daily</h1><p class="muted">Log pribadi untuk berat, menu, protein, dan aktivitas.</p></div>
-      <span class="badge" id="streak">● Mulai minggu ini</span>
+      <div class="actions"><a class="menu-link" href="menu-generator.html">🎲 Menu Generator</a><span class="badge" id="streak">● Mulai minggu ini</span></div>
     </header>
 
     <section class="cards" aria-label="Ringkasan">
@@ -119,6 +119,18 @@
     let app = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || initial;
     let editingId = null;
     const el = id => document.getElementById(id);
+    (() => {
+      try {
+        const picked = JSON.parse(localStorage.getItem('carnivore-menu-pick') || 'null');
+        if (!picked) return;
+        const grams = Number(picked.grams || 100);
+        el('food').value = `${grams} g ${picked.name}`;
+        if (Number.isFinite(picked.protein)) el('protein').value = Math.round(picked.protein * grams / 100);
+        if (Number.isFinite(picked.fat)) el('fat').value = Math.round(picked.fat * grams / 100);
+        if (Number.isFinite(picked.calories)) el('calories').value = Math.round(picked.calories * grams / 100);
+        localStorage.removeItem('carnivore-menu-pick');
+      } catch (e) { console.warn('Menu handoff failed', e); }
+    })();
     const esc = s => String(s || '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
     const kg = v => `${Number(v).toFixed(1)} kg`;
     let sbClient = null;
