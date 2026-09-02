@@ -37,7 +37,7 @@
   overlay.id = 'ganttOverlay';
   overlay.innerHTML = `
     <div class="gantt-toolbar">
-      <strong>30-Day Carnivore Diet · Gantt Output</strong>
+      <strong>90-Day Nutrition Journey · Carnivore → Low Carb</strong>
       <div class="gantt-toolbar-actions">
         <button class="gantt-tool" type="button" id="refreshGantt">↻ Refresh</button>
         <button class="gantt-tool primary" type="button" id="downloadGanttPng">⬇ PNG</button>
@@ -81,7 +81,7 @@
       const html2canvas = await ensureHtml2Canvas(doc);
       const canvas = await html2canvas(report, {scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false});
       const link = document.createElement('a');
-      link.download = `witosis-carnivore-gantt-${new Date().toISOString().slice(0,10)}.png`;
+      link.download = `witosis-90day-nutrition-gantt-${new Date().toISOString().slice(0,10)}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     } catch (err) {
