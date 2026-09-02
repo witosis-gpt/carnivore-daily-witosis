@@ -1,4 +1,4 @@
-const CACHE = 'carnivore-daily-v8';
+const CACHE = 'carnivore-daily-v9';
 const ASSETS = ['./', './index.html', './gantt.js', './meal-planner.js', './meal-planner-loader.js', './menu-identifier.js', './menu-generator.html', './output.html', './manifest.webmanifest'];
 self.addEventListener('install', event => {
   self.skipWaiting();
