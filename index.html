@@ -161,7 +161,7 @@
       const values=data.map(d=>Number(d.weight)).filter(Number.isFinite);
       if(Number.isFinite(target))values.push(target);
       const lo=Math.min(...values)-1,hi=Math.max(...values)+1,range=hi-lo;
-      const rawStep=range/4,power=10**Math.floor(Math.log10(rawStep));
+      const rawStep=range/5,power=10**Math.floor(Math.log10(rawStep));
       const step=[1,2,2.5,5,10].map(n=>n*power).find(n=>n>=rawStep)||10*power;
       const x=i=>l+(w-l-r)*(data.length===1?.5:i/(data.length-1));
       const y=v=>t+(h-t-b)*(hi-v)/range;
